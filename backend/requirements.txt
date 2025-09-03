@@ -1,7 +1,7 @@
 fastapi==0.104.1
-pydantic==1.10.14       # stable 1.x version compatible with Render
+pydantic==1.10.14         # stable 1.x, compatible with FastAPI
 uvicorn==0.24.0
-torch==2.2.0            # works with numpy 1.24+
-transformers==4.31.0    # latest compatible
+torch==2.8.0              # latest Render-supported version
+transformers==4.44.0      # compatible with torch 2.8.0
 tokenizers>=0.19.0 --only-binary=:all:
 numpy>=1.24.0,<2.0
