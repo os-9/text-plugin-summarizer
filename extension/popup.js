@@ -1,37 +1,85 @@
 document.getElementById("summarizeBtn").addEventListener("click", async () => {
-  // Get article text from content.js
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  chrome.scripting.executeScript(
-    {
-      target: { tabId: tab.id },
-      function: extractArticleText
-    },
-    async (results) => {
-      if (!results || !results[0].result) {
-        document.getElementById("summary").innerText = "Could not extract text.";
-        return;
-      }
-      
-      const articleText = results[0].result;
-      
-      // Debug: log the extracted text
-      console.log("Extracted text:", articleText);
-      
-      // Call your FastAPI backend
-      try {
-        const response = await fetch("http://127.0.0.1:8000/summarize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: articleText })
-        });
-        
-        const data = await response.json();
-        document.getElementById("summary").innerText = data.summary;
-      } catch (error) {
-        document.getElementById("summary").innerText = "Error contacting API.";
-      }
+  const summaryDiv = document.getElementById("summary");
+  const loaderDiv = document.getElementById("loader");
+  const button = document.getElementById("summarizeBtn");
+  
+  // Show loader and disable button
+  showLoader();
+  
+  try {
+    // Get article text from content.js
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    const results = await new Promise((resolve, reject) => {
+      chrome.scripting.executeScript(
+        {
+          target: { tabId: tab.id },
+          function: extractArticleText
+        },
+        (results) => {
+          if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+          } else {
+            resolve(results);
+          }
+        }
+      );
+    });
+    
+    if (!results || !results[0].result) {
+      throw new Error("Could not extract text from the page.");
     }
-  );
+    
+    const articleText = results[0].result;
+    
+    if (articleText.length < 50) {
+      throw new Error("Extracted text is too short. Please try on a different article page.");
+    }
+    
+    // Call your FastAPI backend
+    const response = await fetch("http://127.0.0.1:8000/summarize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: articleText })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: "Unknown server error" }));
+      throw new Error(`Server error: ${errorData.detail || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    showSuccess(data.summary);
+    
+  } catch (error) {
+    console.error("Error:", error);
+    showError(error.message || "An unexpected error occurred.");
+  }
+  
+  function showLoader() {
+    summaryDiv.style.display = "none";
+    loaderDiv.style.display = "block";
+    button.disabled = true;
+    button.textContent = "Summarizing...";
+  }
+  
+  function showSuccess(summary) {
+    loaderDiv.style.display = "none";
+    summaryDiv.style.display = "block";
+    summaryDiv.className = "success";
+    summaryDiv.textContent = summary;
+    button.disabled = false;
+    button.textContent = "Summarize Article";
+  }
+  
+  function showError(errorMessage) {
+    loaderDiv.style.display = "none";
+    summaryDiv.style.display = "block";
+    summaryDiv.className = "error";
+    summaryDiv.textContent = `Error: ${errorMessage}`;
+    button.disabled = false;
+    button.textContent = "Summarize Article";
+  }
 });
 
 // Improved function to extract main article content

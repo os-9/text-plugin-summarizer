@@ -43,8 +43,8 @@ async def summarize_article(article: Article):
         print("Starting summarization...")
         summary = summarizer(
             text_to_summarize, 
-            max_length=130, 
-            min_length=30, 
+            max_length=400, 
+            min_length=150, 
             do_sample=False,
             truncation=True  # Ensure model truncates if needed
         )
