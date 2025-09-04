@@ -1,18 +1,54 @@
 {
-    "manifest_version": 3,
-    "name": "News Summarizer",
-    "version": "1.0",
-    "description": "Summarizes news articles using AI",
-    "permissions": ["activeTab", "scripting"],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "read.png",
-        "48": "read.png",
-        "128": "read.png"
-      }
-    },
-    "background": {
-      "service_worker": "background.js"
+  "manifest_version": 3,
+  "name": "AI News Summarizer",
+  "version": "1.0",
+  "description": "Summarize news articles with AI",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Summarize Article"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.reuters.com/*",
+        "*://*.bbc.com/*",
+        "*://*.cnn.com/*",
+        "*://*.nytimes.com/*",
+        "*://*.washingtonpost.com/*",
+        "*://*.theguardian.com/*",
+        "*://*.wsj.com/*",
+        "*://*.bloomberg.com/*",
+        "*://*.ap.org/*",
+        "*://*.npr.org/*",
+        "*://*.abcnews.go.com/*",
+        "*://*.cbsnews.com/*",
+        "*://*.nbcnews.com/*",
+        "*://*.foxnews.com/*",
+        "*://*.usatoday.com/*",
+        "*://*.techcrunch.com/*",
+        "*://*.theverge.com/*",
+        "*://*.wired.com/*",
+        "*://*.cnbc.com/*",
+        "*://*.businessinsider.com/*",
+        "*://*.forbes.com/*",
+        "*://*.economist.com/*",
+        "*://news.google.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_end"
     }
-  }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
